@@ -40,7 +40,7 @@ from PIL import Image, ImageFilter
 
 # below needed to use nano-vectorDB and graphDB neo4j
 from lightrag import LightRAG, QueryParam
-from lightrag.llm import gemini_complete, gpt_4o_mini_complete, gpt_4o_complete, bedrock_complete
+from lightrag.llm import gemini_complete, gpt_4o_mini_complete, gpt_4o_complete, azure_openai_complete, bedrock_complete
 
 # below needed to create multi-agents
 from langgraph.graph import END, StateGraph
@@ -64,7 +64,8 @@ from langchain_core.output_parsers.openai_functions import JsonOutputFunctionsPa
 from langchain_experimental.utilities import PythonREPL
 from langchain_community.tools.tavily_search import TavilySearchResults
 
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
+#from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import ChatVertexAI
@@ -82,8 +83,8 @@ llm_char_limit1 = 30000
 llm_char_limit2 = llm_char_limit1 // 2
 llm_char_limit3 = 0 - llm_char_limit2
 
-llm_options = ["claude-haiku", "gemini-flash", "gpt-4o-mini", "gpt-4o"]
-llm_func_options = [bedrock_complete, gemini_complete, gpt_4o_mini_complete, gpt_4o_complete]
+llm_options = ["azure-4o-mini", "claude-haiku", "gemini-flash", "gpt-4o-mini", "gpt-4o"]
+llm_func_options = [azure_openai_complete, bedrock_complete, gemini_complete, gpt_4o_mini_complete, gpt_4o_complete]
 
 pubmed_base_url = f"https://pubmed.ncbi.nlm.nih.gov"
 RAG_DIR = "/home/ubuntu/multi-agent-ai-langgraph/rag"
@@ -531,8 +532,7 @@ def create_agent(model, tools, system_message: str):
     print("----------")
     print(f"tools: {tools}")
 #Initialize model
-    if model == 'gpt-4o' or model == 'gpt-4o-mini':
-#        llm = ChatOpenAI(temperature=0, streaming=True, model=model, max_tokens=max_out_tokens)
+    if model == 'azure-4o' or model == 'azure-4o-mini':
         llm = AzureChatOpenAI(api_version="2024-12-01-preview", streaming=True, model=model)
 #o1-mini-2024-09-12
     if model == 'gemini-flash':
@@ -780,8 +780,8 @@ def count_tokens(text: str, llm_model: str) -> int:
     print(f"----------")
     print(f"running count_tokens")
     print(f"----------")
-    if llm_model == 'gpt-4o' or llm_model == 'gpt-4o-mini':
-        encoding = tiktoken.encoding_for_model(llm_model)
+    if llm_model == 'azure-4o' or llm_model == 'azure-4o-mini':
+        encoding = tiktoken.encoding_for_model('gpt-4o-mini')
     if llm_model == 'gemini-flash':
         encoding = tiktoken.encoding_for_model('gpt-4o-mini')
     if llm_model == 'claude-haiku':
@@ -808,7 +808,8 @@ def run_show_markdown(Area, SubArea, Keyword, Duration, Key, entities, model):
 {filePath}{SubArea}-all_research_data.md known as mdFile
 """
     print(f'user message to llm: {input_message}')
-    try:
+#    try:
+    if 2 > 1:
         token_count = 0
         token_count = count_tokens(input_message, llm_model)
 #        print(entities)
@@ -852,10 +853,10 @@ def run_show_markdown(Area, SubArea, Keyword, Duration, Key, entities, model):
 #        print(f'using query mode: {mode}')
 #        print(answer)
 #        print('---------------')
-    except BaseException as e:
-        error = repr(e)
-        print("Error: " + error)
-        out_resp = f"Sorry, unable to answer your query."
+#    except BaseException as e:
+#        error = repr(e)
+#        print("Error: " + error)
+#        out_resp = f"Sorry, unable to answer your query."
     print(f"----------")
     print(f"llm_response: {out_resp}")
     print(f"----------")
@@ -884,6 +885,7 @@ def init_RAG(llm_model):
     print(f"init RAG")
     print(f"----------")
     llm_model_func = llm_func_options[llm_model]
+    print(f"llm_model_func: {llm_model_func}")
     rag = LightRAG(
     working_dir=RAG_DIR,
     graph_storage="Neo4JStorage",
