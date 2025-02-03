@@ -6,10 +6,8 @@ from functools import partial
 from typing import Type, cast
 
 from .llm import (
-    gpt_4o_mini_complete,
     azure_openai_complete,
     azure_openai_embedding,
-    openai_embedding,
 )
 from .operate import (
     chunking_by_token_size,
@@ -109,7 +107,7 @@ class LightRAG:
     #llm_model_func: callable = gpt_4o_mini_complete  
     llm_model_func: callable = azure_openai_complete  
     # hf_model_complete
-    llm_model_name: str = "meta-llama/Llama-3.2-1B-Instruct"  #'meta-llama/Llama-3.2-1B'#'google/gemma-2-2b-it'
+    llm_model_name: str = "abc"  #'meta-llama/Llama-3.2-1B'#'google/gemma-2-2b-it'
     llm_model_max_token_size: int = 32768
     llm_model_max_async: int = 16
     llm_model_kwargs: dict = field(default_factory=dict)
@@ -287,10 +285,14 @@ class LightRAG:
             if maybe_new_kg is None:
                 logger.warning("No new entities and relationships found")
                 return
+            else:
+                logger.info("New entities and relationships found")
+
             self.chunk_entity_relation_graph = maybe_new_kg
 
             await self.full_docs.upsert(new_docs)
             await self.text_chunks.upsert(inserting_chunks)
+            logger.info("Completed inserting docs and chunks")
         finally:
             if update_storage:
                 await self._insert_done()
@@ -310,6 +312,7 @@ class LightRAG:
                 continue
             tasks.append(cast(StorageNameSpace, storage_inst).index_done_callback())
         await asyncio.gather(*tasks)
+        logger.info("Completed inserting in storage")
 
     def query(self, query: str, param: QueryParam = QueryParam()):
         loop = always_get_an_event_loop()
