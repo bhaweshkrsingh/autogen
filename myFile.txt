@@ -1,8 +1,7 @@
+export AZURE_EMBEDDING_MODEL=text-embedding-3-small
 export AZURE_OPENAI_ENDPOINT=https://bks-genai-01.openai.azure.com
 export AZURE_OPENAI_API_KEY=C1a0dTj6dw6Zp8nefhUVNpBvYBzQMccxQiLYcQpsZJXOjkGDxHacTdJQQJ99BBACHYHv6XJ3w3AAABACOGb8sc
 export AZURE_OPENAI_API_VERSION=2024-12-01-preview
 export NEO4J_URI=bolt+ssc://ca304296.databases.neo4j.io:7687
 export NEO4J_USERNAME=neo4j
 export NEO4J_PASSWORD=SZUc7o_8449LpikgR6aTur3Rny_Gm5YqrDR1PpYkQos
-export OPENAI_API_KEY=sk-LDNFStH8_tbyscvPaK-h-bwxXgNHUXOuls6YbWBeCKT3BlbkFJRhqh6wYmR3kIK-DaRPj-IW19CyBnCRS0_68OsIxpwA
-
