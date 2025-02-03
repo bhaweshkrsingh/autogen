@@ -92,15 +92,17 @@ async def azure_openai_complete_if_cache(
     api_key=None,
     **kwargs,
 ):
-    if api_key:
-        os.environ["AZURE_OPENAI_API_KEY"] = api_key
-    if base_url:
-        os.environ["AZURE_OPENAI_ENDPOINT"] = base_url
-
-    openai_async_client = AsyncAzureOpenAI(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_model=model
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+    base_url=f"{azure_endpoint}/openai/deployments/{azure_model}"
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION")
+    print(f"azure_openai_complete url: {base_url}, api_version: {api_version}")
+    azure_openai_async_client = (
+        AsyncAzureOpenAI(
+        azure_endpoint=azure_endpoint,
+        api_key=api_key,
+        azure_deployment=azure_model,
+        api_version=api_version)
     )
 
     hashing_kv: BaseKVStorage = kwargs.pop("hashing_kv", None)
@@ -115,8 +117,8 @@ async def azure_openai_complete_if_cache(
         if_cache_return = await hashing_kv.get_by_id(args_hash)
         if if_cache_return is not None:
             return if_cache_return["return"]
-
-    response = await openai_async_client.chat.completions.create(
+#    print(f"azure_openai_async_client: {azure_openai_async_client}")
+    response = await azure_openai_async_client.chat.completions.create(
         model=model, messages=messages, **kwargs
     )
 
@@ -569,7 +571,7 @@ async def azure_openai_complete(
     prompt, system_prompt=None, history_messages=[], **kwargs
 ) -> str:
     return await azure_openai_complete_if_cache(
-        "gpt-4o-mini",
+        "azure-4o-mini",
         prompt,
         system_prompt=system_prompt,
         history_messages=history_messages,
@@ -666,18 +668,20 @@ async def azure_openai_embedding(
     base_url: str = None,
     api_key: str = None,
 ) -> np.ndarray:
-    if api_key:
-        os.environ["AZURE_OPENAI_API_KEY"] = api_key
-    if base_url:
-        os.environ["AZURE_OPENAI_ENDPOINT"] = base_url
 
-    openai_async_client = AsyncAzureOpenAI(
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-        api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+    azure_embedding_model=os.getenv("AZURE_EMBEDDING_MODEL")
+    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
+    base_url=f"{azure_endpoint}/openai/deployments/{azure_embedding_model}"
+    api_version=os.getenv("AZURE_OPENAI_API_VERSION")
+    print(f"azure_openai_embedding url: {base_url}, api_version: {api_version}")
+    azure_openai_async_client = (
+        AsyncAzureOpenAI(
+        azure_endpoint=azure_endpoint,
+        api_key=api_key,
+        azure_deployment=azure_embedding_model,
+        api_version=api_version)
     )
-
-    response = await openai_async_client.embeddings.create(
+    response = await azure_openai_async_client.embeddings.create(
         model=model, input=texts, encoding_format="float"
     )
     return np.array([dp.embedding for dp in response.data])
