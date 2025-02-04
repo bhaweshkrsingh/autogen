@@ -40,7 +40,7 @@ from PIL import Image, ImageFilter
 
 # below needed to use nano-vectorDB and graphDB neo4j
 from lightrag import LightRAG, QueryParam
-from lightrag.llm import gemini_complete, gpt_4o_mini_complete, gpt_4o_complete, azure_openai_complete, bedrock_complete
+from lightrag.llm import gemini_complete, gpt_4o_mini_complete, gpt_4o_complete, azure_openai_complete, bedrock_complete, ollama_model_complete
 
 # below needed to create multi-agents
 from langgraph.graph import END, StateGraph
@@ -65,7 +65,7 @@ from langchain_experimental.utilities import PythonREPL
 from langchain_community.tools.tavily_search import TavilySearchResults
 
 #from langchain_openai import ChatOpenAI
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import ChatVertexAI
@@ -83,13 +83,13 @@ llm_char_limit1 = 30000
 llm_char_limit2 = llm_char_limit1 // 2
 llm_char_limit3 = 0 - llm_char_limit2
 
-llm_options = ["azure-4o-mini", "claude-haiku", "gemini-flash", "gpt-4o-mini", "gpt-4o"]
-llm_func_options = [azure_openai_complete, bedrock_complete, gemini_complete, gpt_4o_mini_complete, gpt_4o_complete]
+llm_options = ["azure-4o-mini", "local-llama", "claude-haiku", "gemini-flash", "gpt-4o-mini", "gpt-4o"]
+llm_func_options = [azure_openai_complete, ollama_model_complete, bedrock_complete, gemini_complete, gpt_4o_mini_complete, gpt_4o_complete]
 
 pubmed_base_url = f"https://pubmed.ncbi.nlm.nih.gov"
-RAG_DIR = "/home/ubuntu/multi-agent-ai-langgraph/rag"
-filePath = "/home/ubuntu/multi-agent-ai-langgraph/docs/"
-pngPath = "/home/ubuntu/multi-agent-ai-langgraph/img"
+RAG_DIR = "C:/Cognizant/multi-agent-ai-langgraph/rag"
+filePath = "C:/Cognizant/multi-agent-ai-langgraph/docs/"
+pngPath = "C:/Cognizant/multi-agent-ai-langgraph/img"
 currDate = datetime.datetime.now().strftime("%Y-%m-%d")
 currYr = datetime.datetime.now().strftime("%Y")
 #    for NEXT gradio version 5
@@ -214,7 +214,7 @@ def create_md_content(subArea: str, keyword: str, Duration: str, entities: list[
     """Supply keyword as: User supplied keyword"""
     """ entities as: ["Biomarkers","Drugs","Genes"]...."""
     """Supply Duration as: 1 year, 10 years, 5 months, 1 week etc..."""
-    """Supply full filePath for pngPath as: /home/ubuntu/multi-agent-ai-langgraph/img"""
+    """Supply full filePath for pngPath as: C:/Cognizant/multi-agent-ai-langgraph/img"""
     """Supply FileName for hmFile as: Breast Cancer-heatmap.png etc... If you want to see the output of a value, you should print it out with `print(...)`. This is visible to the user."""
 
     print("----------")
@@ -534,6 +534,15 @@ def create_agent(model, tools, system_message: str):
 #Initialize model
     if model == 'azure-4o' or model == 'azure-4o-mini':
         llm = AzureChatOpenAI(api_version="2024-12-01-preview", streaming=True, model=model)
+    if model == 'gpt-4o' or model == 'gpt-4o-mini':
+        llm = ChatOpenAI(streaming=True, model=model)
+    if model == 'local-llama':
+        llm = ChatOpenAI(streaming=True,
+        api_key="ollama",
+#        model="llama3.2:latest",
+        model="MFDoom/deepseek-r1-tool-calling:7b",
+        base_url="http://localhost:11434/v1",
+        )
 #o1-mini-2024-09-12
     if model == 'gemini-flash':
         llm = ChatVertexAI(temperature=0, streaming=True, model='gemini-2.0-flash-exp', max_tokens=max_out_tokens)
@@ -780,12 +789,11 @@ def count_tokens(text: str, llm_model: str) -> int:
     print(f"----------")
     print(f"running count_tokens")
     print(f"----------")
-    if llm_model == 'azure-4o' or llm_model == 'azure-4o-mini':
-        encoding = tiktoken.encoding_for_model('gpt-4o-mini')
-    if llm_model == 'gemini-flash':
-        encoding = tiktoken.encoding_for_model('gpt-4o-mini')
-    if llm_model == 'claude-haiku':
-        encoding = tiktoken.encoding_for_model('gpt-4o-mini')
+    if llm_model in ('azure-4o', 'azure-4o-mini', 'local-llama'):
+        encoding_model='gpt-4o-mini'
+    else:
+        encoding_model=llm_model
+    encoding = tiktoken.encoding_for_model(encoding_model)
     print(f"----------")
     print("DONE")
     print(f"----------")
